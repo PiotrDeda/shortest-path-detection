@@ -14,6 +14,7 @@ class Application(tk.Frame):
     def __init__(self, master=None, window_width=1280, window_height=720):
         super().__init__(master)
         self.master = master
+        self.config(bg="#323232")
 
         self.window_width = window_width
         self.window_height = window_height
@@ -62,6 +63,8 @@ class Application(tk.Frame):
         self.should_disable_show_graph_with_shortest_path = tk.BooleanVar()
         self.should_disable_show_graph_with_shortest_path.set(True)
         self.create_buttons()
+        self.interface_frame.config(bg="#323232")
+
 
         # Content header
         self.content_header = tk.Label(self, bg='grey', relief='solid', borderwidth=1, padx=8, pady=8, anchor='w',
@@ -71,6 +74,7 @@ class Application(tk.Frame):
 
         # Content frame
         self.content_frame = tk.Frame(self, borderwidth=1, relief="solid")
+        self.content_frame.config(bg="#323232")
         self.content_frame.pack(side="left", fill=tk.BOTH, expand=True)
 
         # Footer
