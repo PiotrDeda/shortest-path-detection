@@ -5,6 +5,7 @@ from matplotlib import pyplot
 
 from graph import Graph
 from transformations import Transformations
+from utils import pillow_to_cv2
 
 
 class Step:
@@ -31,10 +32,10 @@ class ProcImg:
     applied consecutively to the base image (which is always the first step in the list).
     """
 
-    def __init__(self, path):
+    def __init__(self, image=None, image_path=None):
         """Constructor that loads the image from a specified path and adds it as the first process on the list."""
-        self._step_list = [Step(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB), "base", {}, [])]
-        self._name = path.split("/")[-1].split(".")[0]
+        self._step_list = [Step(cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB) if image_path else image, "base", {}, [])]
+        self._name = image_path.split("/")[-1].split(".")[0]
         self._vertices = []
         self._edges = []
         self._graph = Graph()
