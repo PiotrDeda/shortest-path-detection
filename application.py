@@ -1,7 +1,7 @@
 import platform
+from enum import Enum
 from tkinter import filedialog
 
-from enum import Enum
 from PIL import ImageTk
 
 from dijkstra_algorithm import dijkstra
@@ -65,7 +65,6 @@ class Application(tk.Frame):
         self.create_buttons()
         self.interface_frame.config(bg="#606060")
 
-
         # Content header
         self.content_header = tk.Label(self, bg='grey', relief='solid', borderwidth=1, padx=8, pady=8, anchor='w',
                                        fg="black")
@@ -78,7 +77,9 @@ class Application(tk.Frame):
         self.content_frame.pack(side="left", fill=tk.BOTH, expand=True)
 
         # Footer
-        self.footer = tk.Label(self.master, text="Authors: Adam Łaba, Aleksander Kluczka, Kamil Jagodziński, Jakub Kraśniak, Piotr Deda, Krystian Śledź, Mirosław Kołodziej, Paweł Sipko", bg='black', fg='white', padx=10,
+        self.footer = tk.Label(self.master,
+                               text="Authors: Adam Łaba, Aleksander Kluczka, Kamil Jagodziński, Jakub Kraśniak, Piotr Deda, Krystian Śledź, Mirosław Kołodziej, Paweł Sipko",
+                               bg='black', fg='white', padx=10,
                                pady=10)
         self.footer.pack(side="bottom", fill=tk.X)
 
@@ -138,7 +139,8 @@ class Application(tk.Frame):
 
     def handle_path_point_change(self, *args):
         if self.path_start.get() and self.path_end.get():
-            shortest_distance, shortest_path = dijkstra(self.graph, int(self.path_start.get()), int(self.path_end.get()))
+            shortest_distance, shortest_path = dijkstra(self.graph, int(self.path_start.get()),
+                                                        int(self.path_end.get()))
             self.graph.set_shortest_path(shortest_path)
             self.should_disable_show_graph_with_shortest_path.set(False)
             if platform.system() != "Darwin" and self.current_image_type is ImageType.WITH_GRAPH_SP:
@@ -153,7 +155,8 @@ class Application(tk.Frame):
 
     def show_image_with_graph_and_shortest_path(self):
         self.current_image_type = ImageType.WITH_GRAPH_SP
-        self.graph_image = self.graph.get_image_with_graph(self.original_image.copy(), self.font_size.get(), with_shortest_path=True)
+        self.graph_image = self.graph.get_image_with_graph(self.original_image.copy(), self.font_size.get(),
+                                                           with_shortest_path=True)
         self.set_image(self.graph_image)
         self.show_image()
         self.set_header_text("Original Image With Graph And Shortest Path")
@@ -185,15 +188,25 @@ class Application(tk.Frame):
                                           callback=self.handle_transformation_change,
                                           tooltip_text="Removes small branches from a skeletonized image.")
         self.create_button_with_tooltip(self.interface_frame, text="Show Transformed Image",
-                                        command=self.show_transformed_image, disabled_var=self.should_disable_show_buttons)
+                                        command=self.show_transformed_image,
+                                        disabled_var=self.should_disable_show_buttons)
         self.create_divider(self.interface_frame)
 
         self.create_label_with_toolip(self.interface_frame, text="3. Step - graph")
-        self.create_slider_with_tooltip(self.interface_frame, "Font Size", self.font_size, callback=self.handle_font_size_change)
-        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Graph", command=self.show_image_with_graph, disabled_var=self.should_disable_show_buttons)
-        self.create_select_with_tooltip(self.interface_frame, text="Select Start Point", var=self.path_start, options_var=self.path_options, callback=self.handle_path_point_change, disabled_var=self.should_disable_show_graph_path_points_select)
-        self.create_select_with_tooltip(self.interface_frame, text="Select End Point", var=self.path_end, options_var=self.path_options, callback=self.handle_path_point_change, disabled_var=self.should_disable_show_graph_path_points_select)
-        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Shortest Path", command=self.show_image_with_graph_and_shortest_path, disabled_var=self.should_disable_show_graph_with_shortest_path)
+        self.create_slider_with_tooltip(self.interface_frame, "Font Size", self.font_size,
+                                        callback=self.handle_font_size_change)
+        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Graph",
+                                        command=self.show_image_with_graph,
+                                        disabled_var=self.should_disable_show_buttons)
+        self.create_select_with_tooltip(self.interface_frame, text="Select Start Point", var=self.path_start,
+                                        options_var=self.path_options, callback=self.handle_path_point_change,
+                                        disabled_var=self.should_disable_show_graph_path_points_select)
+        self.create_select_with_tooltip(self.interface_frame, text="Select End Point", var=self.path_end,
+                                        options_var=self.path_options, callback=self.handle_path_point_change,
+                                        disabled_var=self.should_disable_show_graph_path_points_select)
+        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Shortest Path",
+                                        command=self.show_image_with_graph_and_shortest_path,
+                                        disabled_var=self.should_disable_show_graph_with_shortest_path)
 
     def show_image(self):
         self.clear_content()
@@ -241,8 +254,10 @@ class Application(tk.Frame):
         create_slider_with_tooltip(self, frame, text, var, from_=from_, to=to, callback=callback,
                                    tooltip_text=tooltip_text)
 
-    def create_select_with_tooltip(self, frame, text, var, options_var, callback=None, tooltip_text=None, disabled_var=None):
-        create_select_with_tooltip(self, frame, text, var, options_var, callback=callback, tooltip_text=tooltip_text, disabled_var=disabled_var)
+    def create_select_with_tooltip(self, frame, text, var, options_var, callback=None, tooltip_text=None,
+                                   disabled_var=None):
+        create_select_with_tooltip(self, frame, text, var, options_var, callback=callback, tooltip_text=tooltip_text,
+                                   disabled_var=disabled_var)
 
     def create_label_with_toolip(self, frame, text, tooltip_text=None):
         create_label_with_toolip(self, frame, text, tooltip_text=tooltip_text)
