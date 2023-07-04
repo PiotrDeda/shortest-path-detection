@@ -5,7 +5,6 @@ from tkinter import filedialog
 from PIL import ImageTk
 
 from dijkstra_algorithm import dijkstra
-from graph import Graph
 from procimg import ProcImg
 from utils import *
 
@@ -33,10 +32,20 @@ class Application(tk.Frame):
         self.segmentation.set(True)
         self.morph = tk.BooleanVar()
         self.morph.set(True)
+        self.filter = tk.BooleanVar()
+        self.filter.set(True)
         self.skeletonization = tk.BooleanVar()
         self.skeletonization.set(True)
         self.branch_removal = tk.BooleanVar()
         self.branch_removal.set(True)
+        self.vertex_search = tk.BooleanVar()
+        self.vertex_search.set(True)
+        self.vertex_deduplication = tk.BooleanVar()
+        self.vertex_deduplication.set(True)
+        self.path_coloring = tk.BooleanVar()
+        self.path_coloring.set(True)
+        self.path_flooding = tk.BooleanVar()
+        self.path_flooding.set(True)
 
         # Graph
         self.graph = None
@@ -91,7 +100,6 @@ class Application(tk.Frame):
             self.original_image = self.get_image(image_path=filepath)
             self.show_original_image()
             self.handle_transformation_change()
-            self.graph = Graph()
             self.handle_graph_change()
             self.should_disable_show_buttons.set(False)
 
@@ -115,14 +123,22 @@ class Application(tk.Frame):
             img.binarization()
         if self.morph.get():
             img.morph_close()
+        if self.filter.get():
+            img.filter()
         if self.skeletonization.get():
             img.skeletonization()
         if self.branch_removal.get():
             img.branch_removal()
+        if self.vertex_search.get():
+            img.vertex_search()
+        if self.vertex_deduplication.get():
+            img.vertex_deduplication()
+        if self.path_coloring.get():
+            img.path_coloring()
+        if self.path_flooding.get():
+            img.path_flooding()
         self.transformed_image = cv2_to_pillow(img.get_last_image())
-
-        # self.graph = img.get_graph()
-        # self.handle_graph_change()
+        self.graph = img.get_graph()
 
         if self.current_image_type is ImageType.TRANSFORMED:
             self.show_transformed_image()
@@ -130,6 +146,8 @@ class Application(tk.Frame):
     def handle_font_size_change(self, *args):
         if self.current_image_type is ImageType.WITH_GRAPH:
             self.show_image_with_graph()
+        elif self.current_image_type is ImageType.WITH_GRAPH_SP:
+            self.show_image_with_graph_and_shortest_path()
 
     def handle_graph_change(self):
         self.path_options.set(','.join([str(i) for i in range(len(self.graph.vertices))]))
@@ -181,12 +199,32 @@ class Application(tk.Frame):
         self.create_checkbox_with_tooltip(self.interface_frame, text="Morph", var=self.morph,
                                           callback=self.handle_transformation_change,
                                           tooltip_text="Performs morphological closing on a binary image.")
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Filter", var=self.filter,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Applies bilateral filter to an image.")
         self.create_checkbox_with_tooltip(self.interface_frame, text="Skeletonization", var=self.skeletonization,
                                           callback=self.handle_transformation_change,
                                           tooltip_text="Performs skeletonization on a binary image.")
         self.create_checkbox_with_tooltip(self.interface_frame, text="Branch Removal", var=self.branch_removal,
                                           callback=self.handle_transformation_change,
                                           tooltip_text="Removes small branches from a skeletonized image.")
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Vertex search", var=self.vertex_search,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Finds junction points in a skeletonized image.",
+                                          disabled=True)
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Vertex deduplication",
+                                          var=self.vertex_deduplication,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Removes erroneous adjacent junction points from an image.",
+                                          disabled=True)
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Path coloring", var=self.path_coloring,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Colors the paths in an image, each with a different color.",
+                                          disabled=True)
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Path flooding", var=self.path_flooding,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Floods the paths in an image and calculates weights.",
+                                          disabled=True)
         self.create_button_with_tooltip(self.interface_frame, text="Show Transformed Image",
                                         command=self.show_transformed_image,
                                         disabled_var=self.should_disable_show_buttons)

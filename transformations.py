@@ -1,4 +1,3 @@
-import random
 from functools import wraps
 
 import cv2
@@ -49,6 +48,32 @@ class Transformations:
             return wrapper
 
         return decorator
+
+    @staticmethod
+    def _color_generator():
+        """
+        Returns a random color.
+
+        Parameters:
+            None
+        """
+        # while True:
+        #     yield [random.randint(0, 254), random.randint(0, 254), random.randint(0, 254)]
+        i, j, k = 1, 0, 0
+        while True:
+            yield [i, j, k]
+            if i == 254:
+                i = 0
+                if j == 254:
+                    j = 0
+                    if k == 254:
+                        k = 0
+                    else:
+                        k += 1
+                else:
+                    j += 1
+            else:
+                i += 1
 
     @staticmethod
     @_work_with_proc_img("segmentation")
@@ -124,6 +149,17 @@ class Transformations:
         return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
 
     @staticmethod
+    @_work_with_proc_img("filter", ["binary"])
+    def filter(proc_img, parameters, image=None):
+        """
+        Applies bilateral filter to an image.
+
+        Parameters:
+            None
+        """
+        return cv2.bilateralFilter(image, 20, 75, 75)
+
+    @staticmethod
     @_work_with_proc_img("skeletonization", ["binary"])
     def skeletonization(proc_img, parameters, image=None):
         """
@@ -172,17 +208,6 @@ class Transformations:
         # Applying mask
         img_skt_filtered = cv2.bitwise_and(img_skt_rev, mask)
         return img_skt_filtered
-
-    @staticmethod
-    @_work_with_proc_img("blur", ["binary"])
-    def blur(proc_img, parameters, image=None):
-        """
-        Applies bilateral filter to an image.
-
-        Parameters:
-            None
-        """
-        return cv2.bilateralFilter(image, 20, 75, 75)
 
     @staticmethod
     @_work_with_proc_img("vertex_search")
@@ -254,32 +279,6 @@ class Transformations:
         return image
 
     @staticmethod
-    def color_generator():
-        """
-        Returns a random color.
-
-        Parameters:
-            None
-        """
-        while True:
-            yield [random.randint(0, 254), random.randint(0, 254), random.randint(0, 254)]
-        # i, j, k = 1, 0, 0
-        # while True:
-        #     yield [i, j, k]
-        #     if i == 254:
-        #         i = 0
-        #         if j == 254:
-        #             j = 0
-        #             if k == 254:
-        #                 k = 0
-        #             else:
-        #                 k += 1
-        #         else:
-        #             j += 1
-        #     else:
-        #         i += 1
-
-    @staticmethod
     @_work_with_proc_img("path_coloring")
     def path_coloring(proc_img, parameters, image=None):
         """
@@ -288,7 +287,7 @@ class Transformations:
         Parameters:
             None
         """
-        color_generator = Transformations.color_generator()
+        color_generator = Transformations._color_generator()
         for vertex in proc_img.get_vertices():
             for i in range(vertex[1] - 1, vertex[1] + 2):
                 for j in range(vertex[0] - 1, vertex[0] + 2):
@@ -299,18 +298,23 @@ class Transformations:
                     color_set = False
                     color = None
                     length = 1
+                    inter_points = [tuple(vertex)]
                     while True:
                         if image[pointer[0], pointer[1], 0] == 255:
                             if not color_set:
                                 color = next(color_generator)
                                 color_set = True
                             length += 1
+                            if length % 10 == 0:
+                                inter_points.append((pointer[1], pointer[0]))
                             image[pointer[0], pointer[1]] = color
                         elif image[pointer[0], pointer[1], 1] == 255:
                             if not color_set:
                                 color = next(color_generator)
                                 color_set = True
-                            proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]), color, length))
+                            inter_points.append((pointer[1], pointer[0]))
+                            proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]),
+                                               color, length, inter_points))
                             break
                         else:
                             break
@@ -323,7 +327,8 @@ class Transformations:
                                     if not color_set:
                                         color = next(color_generator)
                                         color_set = True
-                                    proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color, length))
+                                    inter_points.append((m, k))
+                                    proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color, length, inter_points))
                                     break
                             else:
                                 continue
@@ -349,7 +354,7 @@ class Transformations:
     @_work_with_proc_img("path_flooding")
     def path_flooding(proc_img, parameters, image=None):
         """
-        Floods the paths in an image.
+        Floods the paths in an image and calculates weights.
 
         Parameters:
             None

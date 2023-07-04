@@ -76,7 +76,7 @@ class ProcImg:
         self._edges.append(edge)
         vertex_1_id = self._vertices.index(edge[0])
         vertex_2_id = self._vertices.index(edge[1])
-        self._graph.set_edge(vertex_1_id, vertex_2_id, 1, [edge[0], edge[1]])
+        self._graph.set_edge(vertex_1_id, vertex_2_id, 1, edge[4])
 
     def set_weight_by_color(self, color, count):
         """Internal function used by process functions to set the weight of an edge by its color."""
@@ -84,7 +84,7 @@ class ProcImg:
             if edge[2] == color:
                 vertex_1_id = self._vertices.index(edge[0])
                 vertex_2_id = self._vertices.index(edge[1])
-                self._graph.set_edge(vertex_1_id, vertex_2_id, edge[3] * edge[3] / count, [edge[0], edge[1]])
+                self._graph.set_edge(vertex_1_id, vertex_2_id, edge[3] * edge[3] / count, edge[4])
 
     def _apply_step(self, step_function, parameters):
         print(f"Applying {step_function.__name__}")
@@ -105,14 +105,14 @@ class ProcImg:
     def morph_close(self, parameters=None):
         return self._apply_step(Transformations.morph_close, parameters)
 
+    def filter(self, parameters=None):
+        return self._apply_step(Transformations.filter, parameters)
+
     def skeletonization(self, parameters=None):
         return self._apply_step(Transformations.skeletonization, parameters)
 
     def branch_removal(self, parameters=None):
         return self._apply_step(Transformations.branch_removal, parameters)
-
-    def blur(self, parameters=None):
-        return self._apply_step(Transformations.blur, parameters)
 
     def vertex_search(self, parameters=None):
         return self._apply_step(Transformations.vertex_search, parameters)
