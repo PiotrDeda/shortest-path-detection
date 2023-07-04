@@ -92,6 +92,12 @@ class ProcImg:
         """Internal function used by process functions to get a working copy of the latest version of the image."""
         return self._step_list[-1].image.copy()
 
+    def get_first_binary(self):
+        """Internal function used by process functions to get a working copy of the latest image with the binary tag."""
+        for step in self._step_list:
+            if "binary" in step.attributes:
+                return step.image.copy()
+
     def add_step(self, image, process_name, parameters, attributes):
         """Internal function used by process functions to add their result to the list."""
         self._step_list.append(Step(image, process_name, parameters, attributes))
@@ -99,13 +105,11 @@ class ProcImg:
     def add_vertex(self, vertex):
         """Internal function used by process functions to add a vertex to the list."""
         self._vertices.append(vertex)
-        print(f"Added vertex {vertex}")
         self._graph.add_vertex(vertex[0], vertex[1])
 
     def add_edge(self, edge):
         """Internal function used by process functions to add an edge to the list."""
         self._edges.append(edge)
-        print(f"Added edge {edge}")
         vertex_1_id = self._vertices.index(edge[0])
         vertex_2_id = self._vertices.index(edge[1])
         self._graph.set_edge(vertex_1_id, vertex_2_id, 1, [edge[0], edge[1]])
@@ -145,3 +149,6 @@ class ProcImg:
 
     def path_coloring(self, parameters=None):
         return self._apply_step(Transformations.path_coloring, parameters)
+
+    def path_flooding(self, parameters=None):
+        return self._apply_step(Transformations.path_flooding, parameters)

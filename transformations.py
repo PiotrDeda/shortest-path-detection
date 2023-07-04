@@ -1,3 +1,4 @@
+import random
 from functools import wraps
 
 import cv2
@@ -174,15 +175,14 @@ class Transformations:
 
     @staticmethod
     @_work_with_proc_img("blur", ["binary"])
-    @_verify_parameters([("kernel_shape", (7, 7))])
     def blur(proc_img, parameters, image=None):
         """
-        Applies Gaussian blur to an image.
+        Applies bilateral filter to an image.
 
         Parameters:
             None
         """
-        return cv2.GaussianBlur(image, parameters["kernel_shape"], 0)
+        return cv2.bilateralFilter(image, 20, 75, 75)
 
     @staticmethod
     @_work_with_proc_img("vertex_search")
@@ -241,23 +241,23 @@ class Transformations:
         Parameters:
             None
         """
-        #while True:
-        #    yield [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
-        i, j, k = 1, 0, 0
         while True:
-            yield [i, j, k]
-            if i == 254:
-                i = 0
-                if j == 254:
-                    j = 0
-                    if k == 254:
-                        k = 0
-                    else:
-                        k += 1
-                else:
-                    j += 1
-            else:
-                i += 1
+            yield [random.randint(0, 254), random.randint(0, 254), random.randint(0, 254)]
+        # i, j, k = 1, 0, 0
+        # while True:
+        #     yield [i, j, k]
+        #     if i == 254:
+        #         i = 0
+        #         if j == 254:
+        #             j = 0
+        #             if k == 254:
+        #                 k = 0
+        #             else:
+        #                 k += 1
+        #         else:
+        #             j += 1
+        #     else:
+        #         i += 1
 
     @staticmethod
     @_work_with_proc_img("path_coloring")
@@ -274,11 +274,18 @@ class Transformations:
                 for j in range(vertex[0] - 1, vertex[0] + 2):
                     pointer = np.array([i, j])
                     shadow = np.array([vertex[1], vertex[0]])
-                    color = next(color_generator)
+                    color_set = False
+                    color = None
                     while True:
                         if np.array_equal(image[pointer[0], pointer[1]], np.array([255, 0, 0])):
+                            if not color_set:
+                                color = next(color_generator)
+                                color_set = True
                             image[pointer[0], pointer[1]] = color
                         elif np.array_equal(image[pointer[0], pointer[1]], np.array([0, 255, 0])):
+                            if not color_set:
+                                color = next(color_generator)
+                                color_set = True
                             proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]), color))
                             break
                         else:
@@ -289,6 +296,9 @@ class Transformations:
                                 if np.array_equal(image[k, m], np.array([0, 255, 0])) \
                                         and not np.array_equal(np.array([k, m]), shadow):
                                     found_vertex = True
+                                    if not color_set:
+                                        color = next(color_generator)
+                                        color_set = True
                                     proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color))
                                     break
                             else:
@@ -308,5 +318,40 @@ class Transformations:
                             else:
                                 continue
                             break
+
+        return image
+
+    @staticmethod
+    @_work_with_proc_img("path_flooding")
+    def path_flooding(proc_img, parameters, image=None):
+        """
+        Floods the paths in an image.
+
+        Parameters:
+            None
+        """
+        binary_background = proc_img.get_first_binary()
+
+        active_pixels = []
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                if not np.array_equal(image[i, j], np.array([0, 0, 0])) \
+                        and not np.array_equal(image[i, j], np.array([0, 255, 0])):
+                    active_pixels.append((i, j))
+
+        (width, height) = image.shape[:2]
+        running = True
+        while running:
+            running = False
+            new_active_pixels = []
+            for (i, j) in active_pixels:
+                for k in range(i - 1, i + 2):
+                    for m in range(j - 1, j + 2):
+                        if 0 <= k < width and 0 <= m < height and binary_background[k, m] == 255 \
+                                and np.array_equal(image[k, m], np.array([0, 0, 0])):
+                            image[k, m] = image[i, j]
+                            new_active_pixels.append((k, m))
+                            running = True
+            active_pixels = new_active_pixels
 
         return image
