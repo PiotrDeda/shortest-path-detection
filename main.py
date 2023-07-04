@@ -6,11 +6,11 @@ from procimg import ProcImg
 
 def main():
     sample_images = [
-        # ProcImg("maps/test1.jpg"),
-        # ProcImg("maps/test2.png"),
-        # ProcImg("maps/test3.png"),
-        # ProcImg("maps/test4.png"),
-        # ProcImg("maps/test5.jpg"),
+        ProcImg("maps/test1.jpg"),
+        ProcImg("maps/test2.png"),
+        ProcImg("maps/test3.png"),
+        ProcImg("maps/test4.png"),
+        ProcImg("maps/test5.jpg"),
         ProcImg("maps/test6.png"),
     ]
 
@@ -26,7 +26,7 @@ def main():
     graph = sample_images[0].get_graph()
     graph.draw_graph('maps/test6.png', "graphs/graph.png")
 
-    shortest_distance, shortest_path = dijkstra(graph, 6, 28)
+    shortest_distance, shortest_path = dijkstra(graph, 8, 31)
 
     print("Shortest distance:", shortest_distance)
     print("Shortest path:", shortest_path)

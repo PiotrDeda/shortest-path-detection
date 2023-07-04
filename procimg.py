@@ -87,6 +87,7 @@ class ProcImg:
             else:
                 pyplot.imsave(f"results/{self._name}_{i}_{self._step_list[i].step_name}.png",
                               self._step_list[i].image)
+        print (f"Saved {self._name}")
 
     def get_last_image(self):
         """Internal function used by process functions to get a working copy of the latest version of the image."""
@@ -115,6 +116,7 @@ class ProcImg:
         self._graph.set_edge(vertex_1_id, vertex_2_id, 1, [edge[0], edge[1]])
 
     def _apply_step(self, step_function, parameters):
+        print(f"Applying {step_function.__name__}")
         if parameters is None:
             parameters = {}
         step_function(self, parameters)
