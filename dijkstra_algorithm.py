@@ -1,5 +1,6 @@
 import sys
 
+
 def dijkstra(graph, source, destination):
     num_vertices = len(graph.vertices)
 

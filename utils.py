@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-from PIL import Image
+
 import numpy as np
+from PIL import Image
 
 
 def pillow_to_cv2(pillow_image):
@@ -9,9 +10,9 @@ def pillow_to_cv2(pillow_image):
 
 
 def cv2_to_pillow(cv2_image):
-    if len(cv2_image.shape) == 2:  # Obraz w skali szarości
+    if len(cv2_image.shape) == 2:  # Grayscale image
         return Image.fromarray(cv2_image)
-    else:  # Obraz RGB
+    else:  # RGB image
         return Image.fromarray(cv2_image[:, :, ::-1])
 
 
@@ -63,7 +64,8 @@ def create_slider_with_tooltip(self, frame, text, var, from_, to, callback, tool
         var.trace("w", callback)
 
 
-def create_select_with_tooltip(self, frame, text, var, options_var, callback=None, tooltip_text=None, disabled_var=None):
+def create_select_with_tooltip(self, frame, text, var, options_var, callback=None, tooltip_text=None,
+                               disabled_var=None):
     create_label_with_toolip(self, frame, text, tooltip_text)
 
     combobox = ttk.Combobox(frame, textvariable=var)

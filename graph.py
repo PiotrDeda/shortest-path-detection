@@ -13,7 +13,6 @@ class Graph:
         self.vertices = []
         self.adjacency_matrix = [[]]
         self.shortest_path = []
-        self.sample_graph()
 
     def add_vertex(self, x, y):
         """Adds a vertex to the graph at a given position on the image."""
@@ -26,21 +25,6 @@ class Graph:
         """Sets the weight and interpolation points of an edge between two vertices."""
         self.adjacency_matrix[u][v] = (weight, interpoints)
         self.adjacency_matrix[v][u] = (weight, interpoints)
-
-    def sample_graph(self):
-        """Create a sample graph for testing purposes."""
-        self.add_vertex(400, 100)
-        self.add_vertex(300, 200)
-        self.add_vertex(100, 300)
-        self.add_vertex(200, 400)
-        self.add_vertex(350, 300)
-
-        self.set_edge(0, 1, 50, [(400, 100), (340, 130), (300, 200)])
-        self.set_edge(1, 2, 75, [(300, 200), (250, 260), (170, 240), (100, 300)])
-        self.set_edge(2, 3, 40, [(100, 300), (200, 400)])
-        self.set_edge(3, 4, 60, [(200, 400), (350, 300)])
-        self.set_edge(4, 1, 33, [(350, 300), (325, 250), (300, 200)])
-        self.set_edge(1, 3, 125, [(300, 200), (260, 270), (220, 320), (200, 400)])
 
     def set_shortest_path(self, path):
         self.shortest_path = path
@@ -95,7 +79,7 @@ class Graph:
                         ind = int(len(points) / 2)
                         point = points[ind]
                     draw_text_in_rectangle(draw, myFont, point,
-                                                str(self.adjacency_matrix[i][j][0]),
+                                                format(self.adjacency_matrix[i][j][0], '.2f'),
                                                 line_width, margin)
 
     def draw_vertices(self, draw, font_size=20, with_shortest_path=False):

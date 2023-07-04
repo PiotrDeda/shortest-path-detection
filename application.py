@@ -1,11 +1,10 @@
 import platform
+from enum import Enum
 from tkinter import filedialog
 
-from enum import Enum
 from PIL import ImageTk
 
 from dijkstra_algorithm import dijkstra
-from graph import Graph
 from procimg import ProcImg
 from utils import *
 
@@ -33,10 +32,20 @@ class Application(tk.Frame):
         self.segmentation.set(True)
         self.morph = tk.BooleanVar()
         self.morph.set(True)
+        self.filter = tk.BooleanVar()
+        self.filter.set(True)
         self.skeletonization = tk.BooleanVar()
         self.skeletonization.set(True)
         self.branch_removal = tk.BooleanVar()
         self.branch_removal.set(True)
+        self.vertex_search = tk.BooleanVar()
+        self.vertex_search.set(True)
+        self.vertex_deduplication = tk.BooleanVar()
+        self.vertex_deduplication.set(True)
+        self.path_coloring = tk.BooleanVar()
+        self.path_coloring.set(True)
+        self.path_flooding = tk.BooleanVar()
+        self.path_flooding.set(True)
 
         # Graph
         self.graph = None
@@ -65,7 +74,6 @@ class Application(tk.Frame):
         self.create_buttons()
         self.interface_frame.config(bg="#606060")
 
-
         # Content header
         self.content_header = tk.Label(self, bg='grey', relief='solid', borderwidth=1, padx=8, pady=8, anchor='w',
                                        fg="black")
@@ -78,7 +86,9 @@ class Application(tk.Frame):
         self.content_frame.pack(side="left", fill=tk.BOTH, expand=True)
 
         # Footer
-        self.footer = tk.Label(self.master, text="Authors: Adam Łaba, Aleksander Kluczka, Kamil Jagodziński, Jakub Kraśniak, Piotr Deda, Krystian Śledź, Mirosław Kołodziej, Paweł Sipko", bg='black', fg='white', padx=10,
+        self.footer = tk.Label(self.master,
+                               text="Authors: Adam Łaba, Aleksander Kluczka, Kamil Jagodziński, Jakub Kraśniak, Piotr Deda, Krystian Śledź, Mirosław Kołodziej, Paweł Sipko",
+                               bg='black', fg='white', padx=10,
                                pady=10)
         self.footer.pack(side="bottom", fill=tk.X)
 
@@ -90,7 +100,6 @@ class Application(tk.Frame):
             self.original_image = self.get_image(image_path=filepath)
             self.show_original_image()
             self.handle_transformation_change()
-            self.graph = Graph()
             self.handle_graph_change()
             self.should_disable_show_buttons.set(False)
 
@@ -114,14 +123,22 @@ class Application(tk.Frame):
             img.binarization()
         if self.morph.get():
             img.morph_close()
+        if self.filter.get():
+            img.filter()
         if self.skeletonization.get():
             img.skeletonization()
         if self.branch_removal.get():
             img.branch_removal()
+        if self.vertex_search.get():
+            img.vertex_search()
+        if self.vertex_deduplication.get():
+            img.vertex_deduplication()
+        if self.path_coloring.get():
+            img.path_coloring()
+        if self.path_flooding.get():
+            img.path_flooding()
         self.transformed_image = cv2_to_pillow(img.get_last_image())
-
-        # self.graph = img.get_graph()
-        # self.handle_graph_change()
+        self.graph = img.get_graph()
 
         if self.current_image_type is ImageType.TRANSFORMED:
             self.show_transformed_image()
@@ -129,6 +146,8 @@ class Application(tk.Frame):
     def handle_font_size_change(self, *args):
         if self.current_image_type is ImageType.WITH_GRAPH:
             self.show_image_with_graph()
+        elif self.current_image_type is ImageType.WITH_GRAPH_SP:
+            self.show_image_with_graph_and_shortest_path()
 
     def handle_graph_change(self):
         self.path_options.set(','.join([str(i) for i in range(len(self.graph.vertices))]))
@@ -138,7 +157,8 @@ class Application(tk.Frame):
 
     def handle_path_point_change(self, *args):
         if self.path_start.get() and self.path_end.get():
-            shortest_distance, shortest_path = dijkstra(self.graph, int(self.path_start.get()), int(self.path_end.get()))
+            shortest_distance, shortest_path = dijkstra(self.graph, int(self.path_start.get()),
+                                                        int(self.path_end.get()))
             self.graph.set_shortest_path(shortest_path)
             self.should_disable_show_graph_with_shortest_path.set(False)
             if platform.system() != "Darwin" and self.current_image_type is ImageType.WITH_GRAPH_SP:
@@ -153,7 +173,8 @@ class Application(tk.Frame):
 
     def show_image_with_graph_and_shortest_path(self):
         self.current_image_type = ImageType.WITH_GRAPH_SP
-        self.graph_image = self.graph.get_image_with_graph(self.original_image.copy(), self.font_size.get(), with_shortest_path=True)
+        self.graph_image = self.graph.get_image_with_graph(self.original_image.copy(), self.font_size.get(),
+                                                           with_shortest_path=True)
         self.set_image(self.graph_image)
         self.show_image()
         self.set_header_text("Original Image With Graph And Shortest Path")
@@ -178,22 +199,52 @@ class Application(tk.Frame):
         self.create_checkbox_with_tooltip(self.interface_frame, text="Morph", var=self.morph,
                                           callback=self.handle_transformation_change,
                                           tooltip_text="Performs morphological closing on a binary image.")
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Filter", var=self.filter,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Applies bilateral filter to an image.")
         self.create_checkbox_with_tooltip(self.interface_frame, text="Skeletonization", var=self.skeletonization,
                                           callback=self.handle_transformation_change,
                                           tooltip_text="Performs skeletonization on a binary image.")
         self.create_checkbox_with_tooltip(self.interface_frame, text="Branch Removal", var=self.branch_removal,
                                           callback=self.handle_transformation_change,
                                           tooltip_text="Removes small branches from a skeletonized image.")
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Vertex search", var=self.vertex_search,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Finds junction points in a skeletonized image.",
+                                          disabled=True)
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Vertex deduplication",
+                                          var=self.vertex_deduplication,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Removes erroneous adjacent junction points from an image.",
+                                          disabled=True)
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Path coloring", var=self.path_coloring,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Colors the paths in an image, each with a different color.",
+                                          disabled=True)
+        self.create_checkbox_with_tooltip(self.interface_frame, text="Path flooding", var=self.path_flooding,
+                                          callback=self.handle_transformation_change,
+                                          tooltip_text="Floods the paths in an image and calculates weights.",
+                                          disabled=True)
         self.create_button_with_tooltip(self.interface_frame, text="Show Transformed Image",
-                                        command=self.show_transformed_image, disabled_var=self.should_disable_show_buttons)
+                                        command=self.show_transformed_image,
+                                        disabled_var=self.should_disable_show_buttons)
         self.create_divider(self.interface_frame)
 
         self.create_label_with_toolip(self.interface_frame, text="3. Step - graph")
-        self.create_slider_with_tooltip(self.interface_frame, "Font Size", self.font_size, callback=self.handle_font_size_change)
-        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Graph", command=self.show_image_with_graph, disabled_var=self.should_disable_show_buttons)
-        self.create_select_with_tooltip(self.interface_frame, text="Select Start Point", var=self.path_start, options_var=self.path_options, callback=self.handle_path_point_change, disabled_var=self.should_disable_show_graph_path_points_select)
-        self.create_select_with_tooltip(self.interface_frame, text="Select End Point", var=self.path_end, options_var=self.path_options, callback=self.handle_path_point_change, disabled_var=self.should_disable_show_graph_path_points_select)
-        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Shortest Path", command=self.show_image_with_graph_and_shortest_path, disabled_var=self.should_disable_show_graph_with_shortest_path)
+        self.create_slider_with_tooltip(self.interface_frame, "Font Size", self.font_size,
+                                        callback=self.handle_font_size_change)
+        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Graph",
+                                        command=self.show_image_with_graph,
+                                        disabled_var=self.should_disable_show_buttons)
+        self.create_select_with_tooltip(self.interface_frame, text="Select Start Point", var=self.path_start,
+                                        options_var=self.path_options, callback=self.handle_path_point_change,
+                                        disabled_var=self.should_disable_show_graph_path_points_select)
+        self.create_select_with_tooltip(self.interface_frame, text="Select End Point", var=self.path_end,
+                                        options_var=self.path_options, callback=self.handle_path_point_change,
+                                        disabled_var=self.should_disable_show_graph_path_points_select)
+        self.create_button_with_tooltip(self.interface_frame, text="Show Image With Shortest Path",
+                                        command=self.show_image_with_graph_and_shortest_path,
+                                        disabled_var=self.should_disable_show_graph_with_shortest_path)
 
     def show_image(self):
         self.clear_content()
@@ -241,8 +292,10 @@ class Application(tk.Frame):
         create_slider_with_tooltip(self, frame, text, var, from_=from_, to=to, callback=callback,
                                    tooltip_text=tooltip_text)
 
-    def create_select_with_tooltip(self, frame, text, var, options_var, callback=None, tooltip_text=None, disabled_var=None):
-        create_select_with_tooltip(self, frame, text, var, options_var, callback=callback, tooltip_text=tooltip_text, disabled_var=disabled_var)
+    def create_select_with_tooltip(self, frame, text, var, options_var, callback=None, tooltip_text=None,
+                                   disabled_var=None):
+        create_select_with_tooltip(self, frame, text, var, options_var, callback=callback, tooltip_text=tooltip_text,
+                                   disabled_var=disabled_var)
 
     def create_label_with_toolip(self, frame, text, tooltip_text=None):
         create_label_with_toolip(self, frame, text, tooltip_text=tooltip_text)

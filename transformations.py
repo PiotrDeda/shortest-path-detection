@@ -50,6 +50,32 @@ class Transformations:
         return decorator
 
     @staticmethod
+    def _color_generator():
+        """
+        Returns a random color.
+
+        Parameters:
+            None
+        """
+        # while True:
+        #     yield [random.randint(0, 254), random.randint(0, 254), random.randint(0, 254)]
+        i, j, k = 1, 0, 0
+        while True:
+            yield [i, j, k]
+            if i == 254:
+                i = 0
+                if j == 254:
+                    j = 0
+                    if k == 254:
+                        k = 0
+                    else:
+                        k += 1
+                else:
+                    j += 1
+            else:
+                i += 1
+
+    @staticmethod
     @_work_with_proc_img("segmentation")
     @_verify_parameters([("blur_kernel_shape", (3, 3)), ("k_means", 3)])
     def segmentation(proc_img, parameters, image=None):
@@ -123,6 +149,17 @@ class Transformations:
         return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
 
     @staticmethod
+    @_work_with_proc_img("filter", ["binary"])
+    def filter(proc_img, parameters, image=None):
+        """
+        Applies bilateral filter to an image.
+
+        Parameters:
+            None
+        """
+        return cv2.bilateralFilter(image, 20, 75, 75)
+
+    @staticmethod
     @_work_with_proc_img("skeletonization", ["binary"])
     def skeletonization(proc_img, parameters, image=None):
         """
@@ -173,18 +210,6 @@ class Transformations:
         return img_skt_filtered
 
     @staticmethod
-    @_work_with_proc_img("blur", ["binary"])
-    @_verify_parameters([("kernel_shape", (7, 7))])
-    def blur(proc_img, parameters, image=None):
-        """
-        Applies Gaussian blur to an image.
-
-        Parameters:
-            None
-        """
-        return cv2.GaussianBlur(image, parameters["kernel_shape"], 0)
-
-    @staticmethod
     @_work_with_proc_img("vertex_search")
     def vertex_search(proc_img, parameters, image=None):
         """
@@ -197,10 +222,20 @@ class Transformations:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         result = image.copy()
 
-        for i in range(1, image.shape[0] - 1):
-            for j in range(1, image.shape[1] - 1):
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
                 if image[i, j, 0] == 255:
-                    neighbor_sum = np.sum(image[i - 1:i + 2, j - 1:j + 2, 0]) - 255
+                    if i == 0 or j == 0 or i == image.shape[0] - 1 or j == image.shape[1] - 1:
+                        if i == 0:
+                            neighbor_sum = np.sum(image[i:i + 2, j - 1:j + 2, 0]) - 255
+                        elif i == image.shape[0] - 1:
+                            neighbor_sum = np.sum(image[i - 1:i + 1, j - 1:j + 2, 0]) - 255
+                        elif j == 0:
+                            neighbor_sum = np.sum(image[i - 1:i + 2, j:j + 2, 0]) - 255
+                        else:
+                            neighbor_sum = np.sum(image[i - 1:i + 2, j - 1:j + 1, 0]) - 255
+                    else:
+                        neighbor_sum = np.sum(image[i - 1:i + 2, j - 1:j + 2, 0]) - 255
                     if neighbor_sum >= 255 * 3 or neighbor_sum <= 255:
                         result[i, j] = [0, 255, 0]
                     else:
@@ -217,47 +252,31 @@ class Transformations:
         Parameters:
             None
         """
-        for i in range(1, image.shape[0] - 1):
-            for j in range(1, image.shape[1] - 1):
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
                 if image[i, j, 1] == 255:
-                    neighbors = (np.array([i - 1, i + 1, i, i]), np.array([j, j, j - 1, j + 1]))
+                    if i == 0 or j == 0 or i == image.shape[0] - 1 or j == image.shape[1] - 1:
+                        if i == 0:
+                            neighbors = (np.array([i, i + 1, i]), np.array([j - 1, j, j + 1]))
+                        elif i == image.shape[0] - 1:
+                            neighbors = (np.array([i - 1, i, i]), np.array([j - 1, j, j + 1]))
+                        elif j == 0:
+                            neighbors = (np.array([i - 1, i + 1, i]), np.array([j, j, j + 1]))
+                        else:
+                            neighbors = (np.array([i - 1, i + 1, i]), np.array([j - 1, j, j]))
+                    else:
+                        neighbors = (np.array([i - 1, i + 1, i, i]), np.array([j, j, j - 1, j + 1]))
                     if np.sum(image[neighbors], axis=0)[1] >= 2 * 255:
                         for k in range(len(neighbors[0])):
-                            if np.array_equal(image[neighbors[0][k], neighbors[1][k]], np.array([0, 255, 0])):
+                            if image[neighbors[0][k], neighbors[1][k], 1] == 255:
                                 image[neighbors[0][k], neighbors[1][k]] = [255, 0, 0]
 
-        for i in range(1, image.shape[0] - 1):
-            for j in range(1, image.shape[1] - 1):
-                if np.array_equal(image[i, j], np.array([0, 255, 0])):
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                if image[i, j, 1] == 255:
                     proc_img.add_vertex((j, i))
 
         return image
-
-    @staticmethod
-    def color_generator():
-        """
-        Returns a random color.
-
-        Parameters:
-            None
-        """
-        #while True:
-        #    yield [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
-        i, j, k = 1, 0, 0
-        while True:
-            yield [i, j, k]
-            if i == 254:
-                i = 0
-                if j == 254:
-                    j = 0
-                    if k == 254:
-                        k = 0
-                    else:
-                        k += 1
-                else:
-                    j += 1
-            else:
-                i += 1
 
     @staticmethod
     @_work_with_proc_img("path_coloring")
@@ -268,28 +287,48 @@ class Transformations:
         Parameters:
             None
         """
-        color_generator = Transformations.color_generator()
+        color_generator = Transformations._color_generator()
         for vertex in proc_img.get_vertices():
             for i in range(vertex[1] - 1, vertex[1] + 2):
                 for j in range(vertex[0] - 1, vertex[0] + 2):
+                    if i < 0 or j < 0 or i >= image.shape[0] or j >= image.shape[1]:
+                        continue
                     pointer = np.array([i, j])
                     shadow = np.array([vertex[1], vertex[0]])
-                    color = next(color_generator)
+                    color_set = False
+                    color = None
+                    length = 1
+                    inter_points = [tuple(vertex)]
                     while True:
-                        if np.array_equal(image[pointer[0], pointer[1]], np.array([255, 0, 0])):
+                        if image[pointer[0], pointer[1], 0] == 255:
+                            if not color_set:
+                                color = next(color_generator)
+                                color_set = True
+                            length += 1
+                            if length % 10 == 0:
+                                inter_points.append((pointer[1], pointer[0]))
                             image[pointer[0], pointer[1]] = color
-                        elif np.array_equal(image[pointer[0], pointer[1]], np.array([0, 255, 0])):
-                            proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]), color))
+                        elif image[pointer[0], pointer[1], 1] == 255:
+                            if not color_set:
+                                color = next(color_generator)
+                                color_set = True
+                            inter_points.append((pointer[1], pointer[0]))
+                            proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]),
+                                               color, length, inter_points))
                             break
                         else:
                             break
                         found_vertex = False
                         for k in range(pointer[0] - 1, pointer[0] + 2):
                             for m in range(pointer[1] - 1, pointer[1] + 2):
-                                if np.array_equal(image[k, m], np.array([0, 255, 0])) \
-                                        and not np.array_equal(np.array([k, m]), shadow):
+                                if 0 <= k < image.shape[0] and 0 <= m < image.shape[1] \
+                                        and image[k, m, 1] == 255 and not np.array_equal(np.array([k, m]), shadow):
                                     found_vertex = True
-                                    proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color))
+                                    if not color_set:
+                                        color = next(color_generator)
+                                        color_set = True
+                                    inter_points.append((m, k))
+                                    proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color, length, inter_points))
                                     break
                             else:
                                 continue
@@ -298,8 +337,8 @@ class Transformations:
                             break
                         for k in range(pointer[0] - 1, pointer[0] + 2):
                             for m in range(pointer[1] - 1, pointer[1] + 2):
-                                if np.array_equal(image[k, m], np.array([255, 0, 0])) \
-                                        and not np.array_equal(np.array([k, m]), shadow) \
+                                if 0 <= k < image.shape[0] and 0 <= m < image.shape[1] \
+                                        and image[k, m, 0] == 255 and not np.array_equal(np.array([k, m]), shadow) \
                                         and not (vertex[1] - 1 <= k <= vertex[1] + 1 and
                                                  vertex[0] - 1 <= m <= vertex[0] + 1):
                                     shadow = pointer
@@ -308,5 +347,51 @@ class Transformations:
                             else:
                                 continue
                             break
+
+        return image
+
+    @staticmethod
+    @_work_with_proc_img("path_flooding")
+    def path_flooding(proc_img, parameters, image=None):
+        """
+        Floods the paths in an image and calculates weights.
+
+        Parameters:
+            None
+        """
+        binary_background = proc_img.get_first_binary()
+
+        active_pixels = []
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                if not np.array_equal(image[i, j], np.array([0, 0, 0])) and not image[i, j, 1] == 255:
+                    active_pixels.append((i, j))
+
+        (width, height) = image.shape[:2]
+        running = True
+        while running:
+            running = False
+            new_active_pixels = []
+            for (i, j) in active_pixels:
+                for k in range(i - 1, i + 2):
+                    for m in range(j - 1, j + 2):
+                        if 0 <= k < width and 0 <= m < height and binary_background[k, m] == 255 \
+                                and np.array_equal(image[k, m], np.array([0, 0, 0])):
+                            image[k, m] = image[i, j]
+                            new_active_pixels.append((k, m))
+                            running = True
+            active_pixels = new_active_pixels
+
+        color_count = {}
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                color = tuple(image[i, j])
+                if color not in color_count:
+                    color_count[color] = 1
+                else:
+                    color_count[color] += 1
+
+        for cc in color_count:
+            proc_img.set_weight_by_color(list(cc), color_count[cc])
 
         return image
