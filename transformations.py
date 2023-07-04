@@ -1,4 +1,3 @@
-import random
 from functools import wraps
 
 import cv2
@@ -279,6 +278,9 @@ class Transformations:
                     while True:
                         if np.array_equal(image[pointer[0], pointer[1]], np.array([255, 0, 0])):
                             image[pointer[0], pointer[1]] = color
+                        elif np.array_equal(image[pointer[0], pointer[1]], np.array([0, 255, 0])):
+                            proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]), color))
+                            break
                         else:
                             break
                         found_vertex = False
@@ -297,7 +299,8 @@ class Transformations:
                         for k in range(pointer[0] - 1, pointer[0] + 2):
                             for m in range(pointer[1] - 1, pointer[1] + 2):
                                 if np.array_equal(image[k, m], np.array([255, 0, 0])) \
-                                        and not np.array_equal(np.array([k, m]), shadow):
+                                        and not np.array_equal(np.array([k, m]), shadow) \
+                                        and not (vertex[1] - 1 <= k <= vertex[1] + 1 and vertex[0] - 1 <= m <= vertex[0] + 1):
                                     shadow = pointer
                                     pointer = np.array([k, m])
                                     break
