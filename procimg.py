@@ -5,6 +5,7 @@ from matplotlib import pyplot
 
 from graph import Graph
 from transformations import Transformations
+from utils import pillow_to_cv2
 
 
 class Step:
@@ -31,10 +32,9 @@ class ProcImg:
     applied consecutively to the base image (which is always the first step in the list).
     """
 
-    def __init__(self, path):
+    def __init__(self, image=None, image_path=None):
         """Constructor that loads the image from a specified path and adds it as the first process on the list."""
-        self._step_list = [Step(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB), "base", {}, [])]
-        self._name = path.split("/")[-1].split(".")[0]
+        self._step_list = [Step(cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB) if image_path else image, "base", {}, [])]
         self._vertices = []
         self._edges = []
         self._graph = Graph()
@@ -75,18 +75,6 @@ class ProcImg:
         else:
             pyplot.imshow(self._step_list[-1].image)
         pyplot.show()
-
-    def save_all_steps(self):
-        """Debug function for saving all images in the process list."""
-        if not os.path.exists("results"):
-            os.makedirs("results")
-        for i in range(len(self._step_list)):
-            if "binary" in self._step_list[i].attributes:
-                pyplot.imsave(f"results/{self._name}_{i}_{self._step_list[i].step_name}.png",
-                              self._step_list[i].image, cmap='gray')
-            else:
-                pyplot.imsave(f"results/{self._name}_{i}_{self._step_list[i].step_name}.png",
-                              self._step_list[i].image)
 
     def get_last_image(self):
         """Internal function used by process functions to get a working copy of the latest version of the image."""
