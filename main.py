@@ -7,8 +7,8 @@ from procimg import ProcImg
 def main():
     sample_images = [
         # ProcImg("maps/test1.jpg"),
-        # ProcImg("maps/test2.png"),
-        ProcImg("maps/test3.png"),
+        ProcImg("maps/test2.png"),
+        # ProcImg("maps/test3.png"),
         # ProcImg("maps/test4.png"),
         # ProcImg("maps/test5.jpg"),
         # ProcImg("maps/test6.png"),
@@ -24,15 +24,15 @@ def main():
     # graph = Graph()
     # graph.sample_graph()
     graph = sample_images[0].get_graph()
-    graph.draw_graph('maps/test3.png', "graphs/graph.png")
+    graph.draw_graph('maps/test2.png', "graphs/graph.png")
 
-    shortest_distance, shortest_path = dijkstra(graph, 1, 231)
+    shortest_distance, shortest_path = dijkstra(graph, 40, 827)
 
     print("Shortest distance:", shortest_distance)
     print("Shortest path:", shortest_path)
 
     graph.set_shortest_path(shortest_path)
-    graph.draw_graph('maps/test3.png', "graphs/graph1.png")
+    graph.draw_graph('maps/test2.png', "graphs/graph1.png")
 
 
 if __name__ == '__main__':

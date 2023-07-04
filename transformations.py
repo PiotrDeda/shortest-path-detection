@@ -300,7 +300,8 @@ class Transformations:
                             for m in range(pointer[1] - 1, pointer[1] + 2):
                                 if np.array_equal(image[k, m], np.array([255, 0, 0])) \
                                         and not np.array_equal(np.array([k, m]), shadow) \
-                                        and not (vertex[1] - 1 <= k <= vertex[1] + 1 and vertex[0] - 1 <= m <= vertex[0] + 1):
+                                        and not (vertex[1] - 1 <= k <= vertex[1] + 1 and
+                                                 vertex[0] - 1 <= m <= vertex[0] + 1):
                                     shadow = pointer
                                     pointer = np.array([k, m])
                                     break
