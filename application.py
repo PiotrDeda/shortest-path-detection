@@ -120,6 +120,9 @@ class Application(tk.Frame):
             img.branch_removal()
         self.transformed_image = cv2_to_pillow(img.get_last_image())
 
+        # self.graph = img.get_graph()
+        # self.handle_graph_change()
+
         if self.current_image_type is ImageType.TRANSFORMED:
             self.show_transformed_image()
 
