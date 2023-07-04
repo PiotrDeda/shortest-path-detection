@@ -87,7 +87,7 @@ class ProcImg:
             else:
                 pyplot.imsave(f"results/{self._name}_{i}_{self._step_list[i].step_name}.png",
                               self._step_list[i].image)
-        print (f"Saved {self._name}")
+        print(f"Saved {self._name}")
 
     def get_last_image(self):
         """Internal function used by process functions to get a working copy of the latest version of the image."""
@@ -114,6 +114,14 @@ class ProcImg:
         vertex_1_id = self._vertices.index(edge[0])
         vertex_2_id = self._vertices.index(edge[1])
         self._graph.set_edge(vertex_1_id, vertex_2_id, 1, [edge[0], edge[1]])
+
+    def set_weight_by_color(self, color, count):
+        """Internal function used by process functions to set the weight of an edge by its color."""
+        for edge in self._edges:
+            if edge[2] == color:
+                vertex_1_id = self._vertices.index(edge[0])
+                vertex_2_id = self._vertices.index(edge[1])
+                self._graph.set_edge(vertex_1_id, vertex_2_id, edge[3] * edge[3] / count, [edge[0], edge[1]])
 
     def _apply_step(self, step_function, parameters):
         print(f"Applying {step_function.__name__}")

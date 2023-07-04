@@ -298,30 +298,32 @@ class Transformations:
                     shadow = np.array([vertex[1], vertex[0]])
                     color_set = False
                     color = None
+                    length = 1
                     while True:
                         if image[pointer[0], pointer[1], 0] == 255:
                             if not color_set:
                                 color = next(color_generator)
                                 color_set = True
+                            length += 1
                             image[pointer[0], pointer[1]] = color
                         elif image[pointer[0], pointer[1], 1] == 255:
                             if not color_set:
                                 color = next(color_generator)
                                 color_set = True
-                            proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]), color))
+                            proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]), color, length))
                             break
                         else:
                             break
                         found_vertex = False
                         for k in range(pointer[0] - 1, pointer[0] + 2):
                             for m in range(pointer[1] - 1, pointer[1] + 2):
-                                if 0 < k < image.shape[0] and 0 < m < image.shape[1] \
+                                if 0 <= k < image.shape[0] and 0 <= m < image.shape[1] \
                                         and image[k, m, 1] == 255 and not np.array_equal(np.array([k, m]), shadow):
                                     found_vertex = True
                                     if not color_set:
                                         color = next(color_generator)
                                         color_set = True
-                                    proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color))
+                                    proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color, length))
                                     break
                             else:
                                 continue
@@ -330,7 +332,7 @@ class Transformations:
                             break
                         for k in range(pointer[0] - 1, pointer[0] + 2):
                             for m in range(pointer[1] - 1, pointer[1] + 2):
-                                if 0 < k < image.shape[0] and 0 < m < image.shape[1] \
+                                if 0 <= k < image.shape[0] and 0 <= m < image.shape[1] \
                                         and image[k, m, 0] == 255 and not np.array_equal(np.array([k, m]), shadow) \
                                         and not (vertex[1] - 1 <= k <= vertex[1] + 1 and
                                                  vertex[0] - 1 <= m <= vertex[0] + 1):
@@ -374,5 +376,17 @@ class Transformations:
                             new_active_pixels.append((k, m))
                             running = True
             active_pixels = new_active_pixels
+
+        color_count = {}
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                color = tuple(image[i, j])
+                if color not in color_count:
+                    color_count[color] = 1
+                else:
+                    color_count[color] += 1
+
+        for cc in color_count:
+            proc_img.set_weight_by_color(list(cc), color_count[cc])
 
         return image

@@ -76,7 +76,8 @@ class Graph:
                         ind1 = int(len(points) / 2) - 1
                         ind2 = int(len(points) / 2)
                         my_font = ImageFont.truetype('COMIC.ttf', 20)
-                        text_size = draw.textsize(str(self.adjacency_matrix[i][j][0]), my_font)
+                        weight = format(self.adjacency_matrix[i][j][0], '.2f')
+                        text_size = draw.textsize(weight, my_font)
                         text_position = ((points[ind1][0] + points[ind2][0]) / 2 - text_size[0] / 2,
                                          (points[ind1][1] + points[ind2][1]) / 2 - text_size[1] / 2)
                         rectangle_position = [text_position,
@@ -84,19 +85,18 @@ class Graph:
                         draw.rectangle(rectangle_position, fill="white", outline='black')
                         draw.text(((points[ind1][0] + points[ind2][0]) / 2 - text_size[0] / 2,
                                    (points[ind1][1] + points[ind2][1]) / 2 - text_size[1] / 2 - 3),
-                                  str(self.adjacency_matrix[i][j][0]),
-                                  font=my_font, fill='black')
+                                  weight, font=my_font, fill='black')
                     else:
                         ind = int(len(points) / 2)
                         my_font = ImageFont.truetype('COMIC.ttf', 20)
-                        text_size = draw.textsize(str(self.adjacency_matrix[i][j][0]), my_font)
+                        weight = format(self.adjacency_matrix[i][j][0], '.2f')
+                        text_size = draw.textsize(weight, my_font)
                         text_position = (points[ind][0] - text_size[0] / 2, points[ind][1] - text_size[1] / 2)
                         rectangle_position = [text_position,
                                               (text_position[0] + text_size[0], text_position[1] + text_size[1])]
                         draw.rectangle(rectangle_position, fill="white", outline='black')
                         draw.text((points[ind][0] - text_size[0] / 2, points[ind][1] - text_size[1] / 2 - 3),
-                                  str(self.adjacency_matrix[i][j][0]),
-                                  font=my_font, fill='black')
+                                  weight, font=my_font, fill='black')
 
     def draw_vertices(self, draw, width):
         center_x = width / 2
