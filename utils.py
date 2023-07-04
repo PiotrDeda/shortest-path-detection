@@ -20,7 +20,7 @@ def cv2_to_pillow(cv2_image):
 def create_button_with_tooltip(self, frame, text, command, tooltip_text=None, disabled_var=None):
     button = tk.Button(frame, text="{}{}".format(text, " (?)".format(tooltip_text) if tooltip_text else ""),
                        command=command)
-    button.config(bg="#323232", fg="white")
+    button.config(bg="#606060", fg="white")
     button.pack(fill=tk.X)
 
     if disabled_var is not None:
@@ -33,7 +33,7 @@ def create_button_with_tooltip(self, frame, text, command, tooltip_text=None, di
 def create_checkbox_with_tooltip(self, frame, text, var, callback, tooltip_text, disabled):
     checkbox = tk.Checkbutton(frame, text="{}{}".format(text, " (?)".format(tooltip_text) if tooltip_text else ""),
                               variable=var, state='disabled' if disabled else 'normal')
-    checkbox.config(bg="#323232", fg="white")
+    checkbox.config(bg="#606060")
     checkbox.pack(side="top", fill=tk.X)
 
     if callback:
@@ -45,7 +45,7 @@ def create_checkbox_with_tooltip(self, frame, text, var, callback, tooltip_text,
 
 def create_label_with_toolip(self, frame, text, tooltip_text=None):
     label = tk.Label(frame, text="{}{}".format(text, " (?)".format(tooltip_text) if tooltip_text else ""), fg="white")
-    label.config(bg="#323232", fg="white")
+    label.config(bg="#606060", fg="white")
     label.pack(side="top", fill=tk.X)
 
     if tooltip_text:
@@ -56,7 +56,7 @@ def create_slider_with_tooltip(self, frame, text, var, from_, to, callback, tool
     create_label_with_toolip(self, frame, text, tooltip_text)
 
     slider = tk.Scale(frame, from_=from_, to=to, orient=tk.HORIZONTAL, variable=var)
-    slider.config(bg="#323232", fg="white")
+    slider.config(bg="#606060", fg="white")
     slider.pack(side="top", fill=tk.X, padx=5, pady=5)
 
     if callback:
