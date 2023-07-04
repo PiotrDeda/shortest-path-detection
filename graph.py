@@ -1,6 +1,3 @@
-import math
-import tkinter as tk
-import cv2
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -51,7 +48,6 @@ class Graph:
     def draw_graph(self, path, output):
         img = Image.open(path)
         width = img.width
-        height = img.height
 
         draw = ImageDraw.Draw(img)
         self.draw_edges(draw)
@@ -67,10 +63,10 @@ class Graph:
                         if i in self.shortest_path and j in self.shortest_path and abs(
                                 self.shortest_path.index(i) - self.shortest_path.index(j)) == 1:
                             draw.line((points[k][0], points[k][1], points[k + 1][0], points[k + 1][1]),
-                                               fill="red", width=3)
+                                      fill="red", width=3)
                         else:
                             draw.line((points[k][0], points[k][1], points[k + 1][0], points[k + 1][1]),
-                                               fill="black", width=3)
+                                      fill="black", width=3)
 
         for i in range(0, len(self.adjacency_matrix)):
             for j in range(0, i):
@@ -79,25 +75,28 @@ class Graph:
                     if len(points) % 2 == 0:
                         ind1 = int(len(points) / 2) - 1
                         ind2 = int(len(points) / 2)
-                        myFont = ImageFont.truetype('COMIC.ttf', 20)
-                        text_size = draw.textsize(str(self.adjacency_matrix[i][j][0]), myFont)
-                        text_position = ((points[ind1][0] + points[ind2][0]) / 2 - text_size[0]/2,(points[ind1][1] + points[ind2][1]) / 2 - text_size[1]/2)
-                        rectangle_position = [text_position, (text_position[0] + text_size[0], text_position[1] + text_size[1])]
+                        my_font = ImageFont.truetype('COMIC.ttf', 20)
+                        text_size = draw.textsize(str(self.adjacency_matrix[i][j][0]), my_font)
+                        text_position = ((points[ind1][0] + points[ind2][0]) / 2 - text_size[0] / 2,
+                                         (points[ind1][1] + points[ind2][1]) / 2 - text_size[1] / 2)
+                        rectangle_position = [text_position,
+                                              (text_position[0] + text_size[0], text_position[1] + text_size[1])]
                         draw.rectangle(rectangle_position, fill="white", outline='black')
-                        draw.text(((points[ind1][0] + points[ind2][0]) / 2 - text_size[0]/2,
-                                                 (points[ind1][1] + points[ind2][1]) / 2 - text_size[1]/2 - 3),
-                                                 str(self.adjacency_matrix[i][j][0]),
-                                                 font=myFont, fill='black')
+                        draw.text(((points[ind1][0] + points[ind2][0]) / 2 - text_size[0] / 2,
+                                   (points[ind1][1] + points[ind2][1]) / 2 - text_size[1] / 2 - 3),
+                                  str(self.adjacency_matrix[i][j][0]),
+                                  font=my_font, fill='black')
                     else:
                         ind = int(len(points) / 2)
-                        myFont = ImageFont.truetype('COMIC.ttf', 20)
-                        text_size = draw.textsize(str(self.adjacency_matrix[i][j][0]), myFont)
-                        text_position = (points[ind][0] - text_size[0]/2, points[ind][1] - text_size[1]/2)
-                        rectangle_position = [text_position, (text_position[0] + text_size[0], text_position[1] + text_size[1])]
+                        my_font = ImageFont.truetype('COMIC.ttf', 20)
+                        text_size = draw.textsize(str(self.adjacency_matrix[i][j][0]), my_font)
+                        text_position = (points[ind][0] - text_size[0] / 2, points[ind][1] - text_size[1] / 2)
+                        rectangle_position = [text_position,
+                                              (text_position[0] + text_size[0], text_position[1] + text_size[1])]
                         draw.rectangle(rectangle_position, fill="white", outline='black')
-                        draw.text((points[ind][0] - text_size[0]/2, points[ind][1] - text_size[1]/2 - 3),
-                                                 str(self.adjacency_matrix[i][j][0]),
-                                                 font=myFont, fill='black')
+                        draw.text((points[ind][0] - text_size[0] / 2, points[ind][1] - text_size[1] / 2 - 3),
+                                  str(self.adjacency_matrix[i][j][0]),
+                                  font=my_font, fill='black')
 
     def draw_vertices(self, draw, width):
         center_x = width / 2
@@ -112,6 +111,5 @@ class Graph:
                 draw.ellipse((v[0] - r, v[1] - r, v[0] + r, v[1] + r), fill="red", outline="black", width=3)
             else:
                 draw.ellipse((v[0] - r, v[1] - r, v[0] + r, v[1] + r), fill="lime", outline="black", width=3)
-            myFont = ImageFont.truetype('COMIC.ttf', 20)
-            draw.text((v[0] - r/2, v[1] - r,), str(i), font=myFont, fill='black')
-
+            my_font = ImageFont.truetype('COMIC.ttf', 20)
+            draw.text((v[0] - r / 2, v[1] - r,), str(i), font=my_font, fill='black')

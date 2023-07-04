@@ -1,8 +1,9 @@
+import random
 from functools import wraps
 
 import cv2
 import numpy as np
-from skimage.morphology import skeletonize
+from skimage.morphology import thin
 
 
 # noinspection PyIncorrectDocstring,PyUnresolvedReferences,PyUnusedLocal
@@ -131,7 +132,7 @@ class Transformations:
         Parameters:
             None
         """
-        img_skel = skeletonize(image / 255)
+        img_skel = thin(image / 255)
         return (img_skel.astype(np.uint8) ^ 1) * 255
 
     @staticmethod
@@ -171,3 +172,137 @@ class Transformations:
         # Applying mask
         img_skt_filtered = cv2.bitwise_and(img_skt_rev, mask)
         return img_skt_filtered
+
+    @staticmethod
+    @_work_with_proc_img("blur", ["binary"])
+    @_verify_parameters([("kernel_shape", (7, 7))])
+    def blur(proc_img, parameters, image=None):
+        """
+        Applies Gaussian blur to an image.
+
+        Parameters:
+            None
+        """
+        return cv2.GaussianBlur(image, parameters["kernel_shape"], 0)
+
+    @staticmethod
+    @_work_with_proc_img("vertex_search")
+    def vertex_search(proc_img, parameters, image=None):
+        """
+        Finds junction points in a skeletonized image.
+
+        Parameters:
+            None
+        """
+        # Find points with 3 or more neighbors
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        result = image.copy()
+
+        for i in range(1, image.shape[0] - 1):
+            for j in range(1, image.shape[1] - 1):
+                if image[i, j, 0] == 255:
+                    neighbor_sum = np.sum(image[i - 1:i + 2, j - 1:j + 2, 0]) - 255
+                    if neighbor_sum >= 255 * 3 or neighbor_sum <= 255:
+                        result[i, j] = [0, 255, 0]
+                    else:
+                        result[i, j] = [255, 0, 0]
+
+        return result
+
+    @staticmethod
+    @_work_with_proc_img("vertex_deduplication")
+    def vertex_deduplication(proc_img, parameters, image=None):
+        """
+        Removes erroneous adjacent junction points from an image.
+
+        Parameters:
+            None
+        """
+        for i in range(1, image.shape[0] - 1):
+            for j in range(1, image.shape[1] - 1):
+                if image[i, j, 1] == 255:
+                    neighbors = (np.array([i - 1, i + 1, i, i]), np.array([j, j, j - 1, j + 1]))
+                    if np.sum(image[neighbors], axis=0)[1] >= 2 * 255:
+                        for k in range(len(neighbors[0])):
+                            if np.array_equal(image[neighbors[0][k], neighbors[1][k]], np.array([0, 255, 0])):
+                                image[neighbors[0][k], neighbors[1][k]] = [255, 0, 0]
+
+        for i in range(1, image.shape[0] - 1):
+            for j in range(1, image.shape[1] - 1):
+                if np.array_equal(image[i, j], np.array([0, 255, 0])):
+                    proc_img.add_vertex((j, i))
+
+        return image
+
+    @staticmethod
+    def color_generator():
+        """
+        Returns a random color.
+
+        Parameters:
+            None
+        """
+        #while True:
+        #    yield [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
+        i, j, k = 1, 0, 0
+        while True:
+            yield [i, j, k]
+            if i == 254:
+                i = 0
+                if j == 254:
+                    j = 0
+                    if k == 254:
+                        k = 0
+                    else:
+                        k += 1
+                else:
+                    j += 1
+            else:
+                i += 1
+
+    @staticmethod
+    @_work_with_proc_img("path_coloring")
+    def path_coloring(proc_img, parameters, image=None):
+        """
+        Colors the paths in an image, each with a different color.
+
+        Parameters:
+            None
+        """
+        color_generator = Transformations.color_generator()
+        for vertex in proc_img.get_vertices():
+            for i in range(vertex[1] - 1, vertex[1] + 2):
+                for j in range(vertex[0] - 1, vertex[0] + 2):
+                    pointer = np.array([i, j])
+                    shadow = np.array([vertex[1], vertex[0]])
+                    color = next(color_generator)
+                    while True:
+                        if np.array_equal(image[pointer[0], pointer[1]], np.array([255, 0, 0])):
+                            image[pointer[0], pointer[1]] = color
+                        else:
+                            break
+                        found_vertex = False
+                        for k in range(pointer[0] - 1, pointer[0] + 2):
+                            for m in range(pointer[1] - 1, pointer[1] + 2):
+                                if np.array_equal(image[k, m], np.array([0, 255, 0])) \
+                                        and not np.array_equal(np.array([k, m]), shadow):
+                                    found_vertex = True
+                                    proc_img.add_edge(((vertex[0], vertex[1]), (m, k), color))
+                                    break
+                            else:
+                                continue
+                            break
+                        if found_vertex:
+                            break
+                        for k in range(pointer[0] - 1, pointer[0] + 2):
+                            for m in range(pointer[1] - 1, pointer[1] + 2):
+                                if np.array_equal(image[k, m], np.array([255, 0, 0])) \
+                                        and not np.array_equal(np.array([k, m]), shadow):
+                                    shadow = pointer
+                                    pointer = np.array([k, m])
+                                    break
+                            else:
+                                continue
+                            break
+
+        return image
