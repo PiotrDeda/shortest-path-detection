@@ -24,6 +24,7 @@ class Application(tk.Frame):
         self.image = None
         self.original_image = None
         self.transformed_image = None
+        self.steps = None
 
         # Transformations
         self.binarization = tk.BooleanVar()
@@ -138,6 +139,7 @@ class Application(tk.Frame):
         if self.path_flooding.get():
             img.path_flooding()
         self.transformed_image = cv2_to_pillow(img.get_last_image())
+        self.steps = img.get_steps()
         self.graph = img.get_graph()
 
         if self.current_image_type is ImageType.TRANSFORMED:
@@ -179,6 +181,11 @@ class Application(tk.Frame):
         self.show_image()
         self.set_header_text("Original Image With Graph And Shortest Path")
 
+    def show_step(self, step_name):
+        step = next((step for step in self.steps if step.step_name == step_name), None)
+        self.transformed_image = cv2_to_pillow(step.image)
+        self.show_transformed_image()
+
     # UI
 
     def create_buttons(self):
@@ -189,47 +196,48 @@ class Application(tk.Frame):
         self.create_divider(self.interface_frame)
 
         self.create_label_with_toolip(self.interface_frame, text="2. Step - transformations")
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Segmentation", var=self.segmentation,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Performs image segmentation using k-means clustering.")
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Binarization", var=self.binarization,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Converts an input image to a binary image using "
-                                                       "Otsu's thresholding.",
-                                          disabled=True)
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Morph", var=self.morph,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Performs morphological closing on a binary image.")
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Filter", var=self.filter,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Applies bilateral filter to an image.")
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Skeletonization", var=self.skeletonization,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Performs skeletonization on a binary image.")
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Branch Removal", var=self.branch_removal,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Removes small branches from a skeletonized image.")
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Vertex search", var=self.vertex_search,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Finds junction points in a skeletonized image.",
-                                          disabled=True)
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Vertex deduplication",
-                                          var=self.vertex_deduplication,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Removes erroneous adjacent junction points from an image.",
-                                          disabled=True)
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Path coloring", var=self.path_coloring,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Colors the paths in an image, each with a different color.",
-                                          disabled=True)
-        self.create_checkbox_with_tooltip(self.interface_frame, text="Path flooding", var=self.path_flooding,
-                                          callback=self.handle_transformation_change,
-                                          tooltip_text="Floods the paths in an image with their respective colors "
-                                                       "and calculates path weights.",
-                                          disabled=True)
-        self.create_button_with_tooltip(self.interface_frame, text="Show Transformed Image",
-                                        command=self.show_transformed_image,
-                                        disabled_var=self.should_disable_show_buttons)
+        self.create_button_with_tooltip(self.interface_frame, "Show segmentation",
+                                        command=lambda: self.show_step("segmentation"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Performs image segmentation using k-means clustering.")
+        self.create_button_with_tooltip(self.interface_frame, "Show binarization",
+                                        command=lambda: self.show_step("binarization"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Converts an input image to a binary image using "
+                                                     "Otsu's thresholding.", )
+        self.create_button_with_tooltip(self.interface_frame, "Show morph",
+                                        command=lambda: self.show_step("morph_close"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Performs morphological closing on a binary image.")
+        self.create_button_with_tooltip(self.interface_frame, "Show filter",
+                                        command=lambda: self.show_step("filter"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Applies bilateral filter to an image.")
+        self.create_button_with_tooltip(self.interface_frame, "Show skeletonization",
+                                        command=lambda: self.show_step("skeletonization"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Performs skeletonization on a binary image.")
+        self.create_button_with_tooltip(self.interface_frame, "Show branch removal",
+                                        command=lambda: self.show_step("branch_removal"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Removes small branches from a skeletonized image.")
+        self.create_button_with_tooltip(self.interface_frame, "Show vertex search",
+                                        command=lambda: self.show_step("vertex_search"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Finds junction points in a skeletonized image.")
+        self.create_button_with_tooltip(self.interface_frame, "Show vertex deduplication",
+                                        command=lambda: self.show_step("vertex_deduplication"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Removes erroneous adjacent junction points from an image.")
+        self.create_button_with_tooltip(self.interface_frame, "Show path coloring",
+                                        command=lambda: self.show_step("path_coloring"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Colors the paths in an image, each with a different color.")
+        self.create_button_with_tooltip(self.interface_frame, "Show path flooding",
+                                        command=lambda: self.show_step("path_flooding"),
+                                        disabled_var=self.should_disable_show_buttons,
+                                        tooltip_text="Floods the paths in an image with their respective colors "
+                                                     "and calculates path weights.")
         self.create_divider(self.interface_frame)
 
         self.create_label_with_toolip(self.interface_frame, text="3. Step - graph")
@@ -281,10 +289,6 @@ class Application(tk.Frame):
 
     def create_button_with_tooltip(self, frame, text, command, tooltip_text=None, disabled_var=None):
         create_button_with_tooltip(self, frame, text, command, tooltip_text, disabled_var)
-
-    def create_checkbox_with_tooltip(self, frame, text, var, callback=None, tooltip_text=None, disabled=False):
-        create_checkbox_with_tooltip(self, frame, text, var, callback=callback, tooltip_text=tooltip_text,
-                                     disabled=disabled)
 
     @staticmethod
     def create_divider(frame, color='black'):

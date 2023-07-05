@@ -31,20 +31,6 @@ def create_button_with_tooltip(self, frame, text, command, tooltip_text=None, di
         _handle_tooltip(self, button, tooltip_text)
 
 
-def create_checkbox_with_tooltip(self, frame, text, var, callback, tooltip_text, disabled):
-    # noinspection PyTypeChecker
-    checkbox = tk.Checkbutton(frame, text="{}{}".format(text, " (?)".format(tooltip_text) if tooltip_text else ""),
-                              variable=var, state='disabled' if disabled else 'normal')
-    checkbox.config(bg="#606060")
-    checkbox.pack(side="top", fill=tk.X)
-
-    if callback:
-        var.trace("w", callback)
-
-    if tooltip_text:
-        _handle_tooltip(self, checkbox, tooltip_text)
-
-
 def create_label_with_toolip(self, frame, text, tooltip_text=None):
     label = tk.Label(frame, text="{}{}".format(text, " (?)".format(tooltip_text) if tooltip_text else ""), fg="white")
     label.config(bg="#606060", fg="white")

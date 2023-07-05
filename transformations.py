@@ -154,7 +154,7 @@ class Transformations:
             None
         """
         img_skel = thin(image / 255)
-        return (img_skel.astype(np.uint8) ^ 1) * 255
+        return cv2.bitwise_not((img_skel.astype(np.uint8) ^ 1) * 255)
 
     @staticmethod
     @_work_with_proc_img("branch_removal", ["binary"])
@@ -166,13 +166,10 @@ class Transformations:
         Parameters:
             tol (float): Threshold value to determine small branches (default: 0.05).
         """
-        # Invert the skeletonized image
-        img_skt_rev = cv2.bitwise_not(image)
-
         # Searching isolated elements on binary photo with connectedComponentsWithStats
         # connectivity = 4 -> two pixels are connected if are horizontally or vertically adjacent
         # connectivity = 8 -> same as with 4 but including corners
-        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(img_skt_rev, connectivity=8)
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(image, connectivity=8)
 
         # Calculating length of each element
         lengths = [stats[i, cv2.CC_STAT_AREA] for i in range(1, num_labels)]
@@ -191,7 +188,7 @@ class Transformations:
             mask[labels == component_label] = 255
 
         # Applying mask
-        img_skt_filtered = cv2.bitwise_and(img_skt_rev, mask)
+        img_skt_filtered = cv2.bitwise_and(image, mask)
         return img_skt_filtered
 
     @staticmethod
@@ -260,7 +257,7 @@ class Transformations:
                     # ...and calculate sum of cardinally adjacent green pixels
                     else:
                         neighbors = (np.array([i - 1, i + 1, i, i]), np.array([j, j, j - 1, j + 1]))
-                    # If there are two or more green pixels, turn them red
+                    # If there are two or more green pixels, turn them blue
                     if np.sum(image[neighbors], axis=0)[1] >= 2 * 255:
                         for k in range(len(neighbors[0])):
                             if image[neighbors[0][k], neighbors[1][k], 1] == 255:
