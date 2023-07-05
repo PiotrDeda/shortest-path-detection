@@ -87,9 +87,9 @@ class Application(tk.Frame):
 
         # Footer
         self.footer = tk.Label(self.master,
-                               text="Authors: Adam Łaba, Aleksander Kluczka, Kamil Jagodziński, Jakub Kraśniak, Piotr Deda, Krystian Śledź, Mirosław Kołodziej, Paweł Sipko",
-                               bg='black', fg='white', padx=10,
-                               pady=10)
+                               text="Authors: Piotr Deda, Kamil Jagodziński, Aleksander Kluczka, Mirosław Kołodziej, "
+                                    "Jakub Kraśniak, Adam Łaba, Paweł Sipko, Krystian Śledź",
+                               bg='black', fg='white', padx=10, pady=10)
         self.footer.pack(side="bottom", fill=tk.X)
 
     # Methods
@@ -115,7 +115,7 @@ class Application(tk.Frame):
         self.show_image()
         self.set_header_text("Transformed image")
 
-    def handle_transformation_change(self, *args):
+    def handle_transformation_change(self, *_args):
         img = ProcImg(pillow_to_cv2(self.original_image))
         if self.segmentation.get():
             img.segmentation()
@@ -143,7 +143,7 @@ class Application(tk.Frame):
         if self.current_image_type is ImageType.TRANSFORMED:
             self.show_transformed_image()
 
-    def handle_font_size_change(self, *args):
+    def handle_font_size_change(self, *_args):
         if self.current_image_type is ImageType.WITH_GRAPH:
             self.show_image_with_graph()
         elif self.current_image_type is ImageType.WITH_GRAPH_SP:
@@ -155,7 +155,7 @@ class Application(tk.Frame):
         if self.current_image_type is ImageType.WITH_GRAPH:
             self.show_image_with_graph()
 
-    def handle_path_point_change(self, *args):
+    def handle_path_point_change(self, *_args):
         if self.path_start.get() and self.path_end.get():
             shortest_distance, shortest_path = dijkstra(self.graph, int(self.path_start.get()),
                                                         int(self.path_end.get()))
@@ -194,7 +194,8 @@ class Application(tk.Frame):
                                           tooltip_text="Performs image segmentation using k-means clustering.")
         self.create_checkbox_with_tooltip(self.interface_frame, text="Binarization", var=self.binarization,
                                           callback=self.handle_transformation_change,
-                                          tooltip_text="Converts an input image to a binary image using Otsu's thresholding.",
+                                          tooltip_text="Converts an input image to a binary image using "
+                                                       "Otsu's thresholding.",
                                           disabled=True)
         self.create_checkbox_with_tooltip(self.interface_frame, text="Morph", var=self.morph,
                                           callback=self.handle_transformation_change,
@@ -284,7 +285,8 @@ class Application(tk.Frame):
         create_checkbox_with_tooltip(self, frame, text, var, callback=callback, tooltip_text=tooltip_text,
                                      disabled=disabled)
 
-    def create_divider(self, frame, color='black'):
+    @staticmethod
+    def create_divider(frame, color='black'):
         divider = tk.Frame(frame, bg=color, height=1)
         divider.pack(fill=tk.X, pady=8)
 

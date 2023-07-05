@@ -1,7 +1,4 @@
-import math
-import tkinter as tk
-import cv2
-from PIL import Image, ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont
 
 
 class Graph:
@@ -49,20 +46,20 @@ class Graph:
                         if with_shortest_path and i in self.shortest_path and j in self.shortest_path and abs(
                                 self.shortest_path.index(i) - self.shortest_path.index(j)) == 1:
                             draw.line((points[k][0], points[k][1], points[k + 1][0], points[k + 1][1]),
-                                               fill="red", width=3)
+                                      fill="red", width=3)
                         else:
                             draw.line((points[k][0], points[k][1], points[k + 1][0], points[k + 1][1]),
-                                               fill="black", width=3)
+                                      fill="black", width=3)
 
-        def draw_text_in_rectangle(draw, myFont, points, text, line_width, margin):
-            text_size = draw.textsize(text, myFont)
-            text_position = (points[0] - text_size[0] / 2, points[1] - text_size[1] / 2)
+        def draw_text_in_rectangle(text_points, text):
+            text_size = draw.textsize(text, my_font)
+            text_position = (text_points[0] - text_size[0] / 2, text_points[1] - text_size[1] / 2)
             rectangle_position = [text_position, (text_position[0] + text_size[0] + 2 * margin,
                                                   text_position[1] + text_size[1])]
             draw.rectangle(rectangle_position, fill="white", outline='black', width=line_width)
-            draw.text((text_position[0]+margin, text_position[1] - margin), text, font=myFont, fill='black')
+            draw.text((text_position[0] + margin, text_position[1] - margin), text, font=my_font, fill='black')
 
-        myFont = ImageFont.truetype('COMIC.ttf', font_size)
+        my_font = ImageFont.truetype('COMIC.ttf', font_size)
         line_width = min(max(int(font_size / 20 * 3), 1), 2)
         margin = int(font_size / 20 * 3)
 
@@ -78,16 +75,14 @@ class Graph:
                     else:
                         ind = int(len(points) / 2)
                         point = points[ind]
-                    draw_text_in_rectangle(draw, myFont, point,
-                                                format(self.adjacency_matrix[i][j][0], '.2f'),
-                                                line_width, margin)
+                    draw_text_in_rectangle(point, format(self.adjacency_matrix[i][j][0], '.2f'))
 
     def draw_vertices(self, draw, font_size=20, with_shortest_path=False):
-        myFont = ImageFont.truetype('COMIC.ttf', font_size)
+        my_font = ImageFont.truetype('COMIC.ttf', font_size)
 
         for i, v in enumerate(self.vertices):
             text = str(i)
-            text_width, text_height = draw.textsize(text, font=myFont)
+            text_width, text_height = draw.textsize(text, font=my_font)
 
             r = text_height / 2 + font_size / 4
             line_width = min(max(font_size // 10, 1), 2)
@@ -97,10 +92,6 @@ class Graph:
             else:
                 draw.ellipse((v[0] - r, v[1] - r, v[0] + r, v[1] + r), fill="lime", outline="black", width=line_width)
 
-            text_x = v[0] - text_width / 2  # Centrowanie tekstu
+            text_x = v[0] - text_width / 2  # Text centering
             text_y = v[1] - text_height / 2 - font_size / 5
-            draw.text((text_x, text_y), text, font=myFont, fill='black')
-
-
-
-
+            draw.text((text_x, text_y), text, font=my_font, fill='black')

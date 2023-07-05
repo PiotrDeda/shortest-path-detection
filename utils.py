@@ -32,6 +32,7 @@ def create_button_with_tooltip(self, frame, text, command, tooltip_text=None, di
 
 
 def create_checkbox_with_tooltip(self, frame, text, var, callback, tooltip_text, disabled):
+    # noinspection PyTypeChecker
     checkbox = tk.Checkbutton(frame, text="{}{}".format(text, " (?)".format(tooltip_text) if tooltip_text else ""),
                               variable=var, state='disabled' if disabled else 'normal')
     checkbox.config(bg="#606060")
@@ -79,7 +80,7 @@ def create_select_with_tooltip(self, frame, text, var, options_var, callback=Non
 
     # handle options
 
-    def update_options(*args):
+    def update_options(*_args):
         combobox['values'] = options_var.get().split(",")
 
     # Update combobox values immediately
@@ -97,7 +98,8 @@ def get_image(self, image=None, image_path=None):
 
     # Image aspect ratio
     max_width = self.window_width * 0.8
-    max_height = self.window_height - self.title.winfo_height() - self.footer.winfo_height() - self.content_header.winfo_height() - 4
+    max_height = (self.window_height - self.title.winfo_height() - self.footer.winfo_height() -
+                  self.content_header.winfo_height() - 4)
     width_ratio = max_width / img.width
     height_ratio = max_height / img.height
     min_ratio = min(width_ratio, height_ratio)
@@ -114,7 +116,7 @@ def get_image(self, image=None, image_path=None):
 
 def _handle_tooltip(self, ui_element, tooltip_text):
     if tooltip_text:
-        def enter(event):
+        def enter(_event):
             self.tooltip = tk.Toplevel(self)
             self.tooltip.wm_overrideredirect(True)  # Remove border
             label = tk.Label(self.tooltip, text=tooltip_text, fg="black", bg="white", relief="solid", borderwidth=1,
@@ -126,7 +128,7 @@ def _handle_tooltip(self, ui_element, tooltip_text):
             width = ui_element.winfo_width()
             self.tooltip.wm_geometry(f"+{x + width}+{y + 5}")
 
-        def leave(event):
+        def leave(_event):
             self.tooltip.destroy()
 
         ui_element.bind("<Enter>", enter)
@@ -134,7 +136,7 @@ def _handle_tooltip(self, ui_element, tooltip_text):
 
 
 def _handle_disabled_var_change(ui_element, var):
-    def handle_change(*args):
+    def handle_change(*_args):
         ui_element.config(state='disabled' if var.get() else 'normal')
 
     handle_change()
