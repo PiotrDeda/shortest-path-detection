@@ -306,7 +306,7 @@ class Transformations:
 
                     # Try to continue the path until it reaches a vertex or can't paint
                     while True:
-                        # If pixel at pointer is red, paint it
+                        # If pixel at pointer is blue, paint it
                         if image[pointer[0], pointer[1], 0] == 255:
                             if not color_set:
                                 color = next(color_generator)
