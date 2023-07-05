@@ -224,7 +224,8 @@ class Application(tk.Frame):
                                           disabled=True)
         self.create_checkbox_with_tooltip(self.interface_frame, text="Path flooding", var=self.path_flooding,
                                           callback=self.handle_transformation_change,
-                                          tooltip_text="Floods the paths in an image and calculates weights.",
+                                          tooltip_text="Floods the paths in an image with their respective colors "
+                                                       "and calculates path weights.",
                                           disabled=True)
         self.create_button_with_tooltip(self.interface_frame, text="Show Transformed Image",
                                         command=self.show_transformed_image,

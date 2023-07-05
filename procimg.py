@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 from graph import Graph
 from transformations import Transformations
@@ -66,10 +67,10 @@ class ProcImg:
         """Internal function used by process functions to add their result to the list."""
         self._step_list.append(Step(image, process_name, parameters, attributes))
 
-    def add_vertex(self, vertex):
-        """Internal function used by process functions to add a vertex to the list."""
-        self._vertices.append(vertex)
-        self._graph.add_vertex(vertex[0], vertex[1])
+    def add_vertices(self, vertices):
+        """Internal function used by process functions to add vertices to the list."""
+        self._vertices += vertices
+        self._graph.add_vertices(vertices)
 
     def add_edge(self, edge):
         """Internal function used by process functions to add an edge to the list."""
@@ -81,7 +82,7 @@ class ProcImg:
     def set_weight_by_color(self, color, count):
         """Internal function used by process functions to set the weight of an edge by its color."""
         for edge in self._edges:
-            if edge[2] == color:
+            if np.array_equal(edge[2], color):
                 vertex_1_id = self._vertices.index(edge[0])
                 vertex_2_id = self._vertices.index(edge[1])
                 self._graph.set_edge(vertex_1_id, vertex_2_id, edge[3] * edge[3] / count, edge[4])

@@ -52,28 +52,13 @@ class Transformations:
     @staticmethod
     def _color_generator():
         """
-        Returns a random color.
-
-        Parameters:
-            None
+        Generates consecutive RGB colors.
+        Excludes [0, 0, 0] and any color with a value of 255 (reserved special colors).
         """
-        # while True:
-        #     yield [random.randint(0, 254), random.randint(0, 254), random.randint(0, 254)]
-        i, j, k = 1, 0, 0
-        while True:
-            yield [i, j, k]
-            if i == 254:
-                i = 0
-                if j == 254:
-                    j = 0
-                    if k == 254:
-                        k = 0
-                    else:
-                        k += 1
-                else:
-                    j += 1
-            else:
-                i += 1
+        for r in range(1, 255):
+            for g in range(0, 255):
+                for b in range(0, 255):
+                    yield [r, g, b]
 
     @staticmethod
     @_work_with_proc_img("segmentation")
@@ -218,13 +203,15 @@ class Transformations:
         Parameters:
             None
         """
-        # Find points with 3 or more neighbors
+        # Transform image representation from grayscale to BGR and make a working copy
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         result = image.copy()
 
+        # For each filled pixel in the image...
         for i in range(image.shape[0]):
             for j in range(image.shape[1]):
                 if image[i, j, 0] == 255:
+                    # ...handle edges...
                     if i == 0 or j == 0 or i == image.shape[0] - 1 or j == image.shape[1] - 1:
                         if i == 0:
                             neighbor_sum = np.sum(image[i:i + 2, j - 1:j + 2, 0]) - 255
@@ -234,12 +221,15 @@ class Transformations:
                             neighbor_sum = np.sum(image[i - 1:i + 2, j:j + 2, 0]) - 255
                         else:
                             neighbor_sum = np.sum(image[i - 1:i + 2, j - 1:j + 1, 0]) - 255
+                    # ...and calculate sum of values of surrounding pixels
                     else:
                         neighbor_sum = np.sum(image[i - 1:i + 2, j - 1:j + 2, 0]) - 255
-                    if neighbor_sum >= 255 * 3 or neighbor_sum <= 255:
-                        result[i, j] = [0, 255, 0]
-                    else:
+
+                    # If there are two filled pixels, it's a path, otherwise it's a junction point
+                    if neighbor_sum == 255 * 2:
                         result[i, j] = [255, 0, 0]
+                    else:
+                        result[i, j] = [0, 255, 0]
 
         return result
 
@@ -252,10 +242,13 @@ class Transformations:
         Parameters:
             None
         """
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
+        # For each green pixel in the image...
+        (width, height) = image.shape[:2]
+        for i in range(width):
+            for j in range(height):
                 if image[i, j, 1] == 255:
-                    if i == 0 or j == 0 or i == image.shape[0] - 1 or j == image.shape[1] - 1:
+                    # ...handle edges...
+                    if i == 0 or j == 0 or i == width - 1 or j == height - 1:
                         if i == 0:
                             neighbors = (np.array([i, i + 1, i]), np.array([j - 1, j, j + 1]))
                         elif i == image.shape[0] - 1:
@@ -264,17 +257,18 @@ class Transformations:
                             neighbors = (np.array([i - 1, i + 1, i]), np.array([j, j, j + 1]))
                         else:
                             neighbors = (np.array([i - 1, i + 1, i]), np.array([j - 1, j, j]))
+                    # ...and calculate sum of cardinally adjacent green pixels
                     else:
                         neighbors = (np.array([i - 1, i + 1, i, i]), np.array([j, j, j - 1, j + 1]))
+                    # If there are two or more green pixels, turn them red
                     if np.sum(image[neighbors], axis=0)[1] >= 2 * 255:
                         for k in range(len(neighbors[0])):
                             if image[neighbors[0][k], neighbors[1][k], 1] == 255:
                                 image[neighbors[0][k], neighbors[1][k]] = [255, 0, 0]
 
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
-                if image[i, j, 1] == 255:
-                    proc_img.add_vertex((j, i))
+        # Add each green pixel into a list of vertices
+        green_vertices = np.argwhere(image[:, :, 1] == 255)
+        proc_img.add_vertices([(j, i) for i, j in green_vertices])
 
         return image
 
@@ -287,27 +281,45 @@ class Transformations:
         Parameters:
             None
         """
+        # Initialize generator for consecutive colors that will uniquely identify paths
         color_generator = Transformations._color_generator()
+
+        # For each vertex...
         for vertex in proc_img.get_vertices():
+            # ...try to fire a path in all 8 directions
             for i in range(vertex[1] - 1, vertex[1] + 2):
                 for j in range(vertex[0] - 1, vertex[0] + 2):
+                    # Handle edges
                     if i < 0 or j < 0 or i >= image.shape[0] or j >= image.shape[1]:
                         continue
+
+                    # Pointer marks current position, shadow marks previous position
                     pointer = np.array([i, j])
                     shadow = np.array([vertex[1], vertex[0]])
+
+                    # Only set color when a path can be started
                     color_set = False
                     color = None
+
+                    # Initialize path length (with 1 to prevent division by 0)
                     length = 1
+
+                    # Add vertex as the first intermediate point of the path
                     inter_points = [tuple(vertex)]
+
+                    # Try to continue the path until it reaches a vertex or can't paint
                     while True:
+                        # If pixel at pointer is red, paint it
                         if image[pointer[0], pointer[1], 0] == 255:
                             if not color_set:
                                 color = next(color_generator)
                                 color_set = True
                             length += 1
+                            # Add an intermediate point every 10 pixels
                             if length % 10 == 0:
                                 inter_points.append((pointer[1], pointer[0]))
                             image[pointer[0], pointer[1]] = color
+                        # Handle case where vertices are adjacent
                         elif image[pointer[0], pointer[1], 1] == 255:
                             if not color_set:
                                 color = next(color_generator)
@@ -316,11 +328,15 @@ class Transformations:
                             proc_img.add_edge(((vertex[0], vertex[1]), (pointer[1], pointer[0]),
                                                color, length, inter_points))
                             break
+                        # If not possible to start the path, break
                         else:
                             break
+
+                        # Search adjacent pixels for a vertex
                         found_vertex = False
                         for k in range(pointer[0] - 1, pointer[0] + 2):
                             for m in range(pointer[1] - 1, pointer[1] + 2):
+                                # If pointer is at vertex other than the starting one, finish the path and add as edge
                                 if 0 <= k < image.shape[0] and 0 <= m < image.shape[1] \
                                         and image[k, m, 1] == 255 and not np.array_equal(np.array([k, m]), shadow):
                                     found_vertex = True
@@ -335,6 +351,8 @@ class Transformations:
                             break
                         if found_vertex:
                             break
+
+                        # Search adjacent pixels for path continuation
                         for k in range(pointer[0] - 1, pointer[0] + 2):
                             for m in range(pointer[1] - 1, pointer[1] + 2):
                                 if 0 <= k < image.shape[0] and 0 <= m < image.shape[1] \
@@ -354,44 +372,47 @@ class Transformations:
     @_work_with_proc_img("path_flooding")
     def path_flooding(proc_img, parameters, image=None):
         """
-        Floods the paths in an image and calculates weights.
+        Floods the paths in an image with their respective colors and calculates path weights.
 
         Parameters:
             None
         """
+        # Get the binary image which will be used as a reference for which pixels need to be flooded
         binary_background = proc_img.get_first_binary()
 
-        active_pixels = []
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
-                if not np.array_equal(image[i, j], np.array([0, 0, 0])) and not image[i, j, 1] == 255:
-                    active_pixels.append((i, j))
+        # Find all colored path pixels
+        active_pixels = np.argwhere(np.logical_and(np.any(image != [0, 0, 0], axis=2), image[:, :, 1] != 255))
 
+        # Initialize optimization variables
         (width, height) = image.shape[:2]
+        black = np.array([0, 0, 0])
+
+        # Run loop until no changes were made
         running = True
         while running:
             running = False
+
+            # Initialize optimization variables
             new_active_pixels = []
+            append = new_active_pixels.append
+
+            # For each active pixel, paint adjacent pixels that are filled in the binary background with the same color
             for (i, j) in active_pixels:
                 for k in range(i - 1, i + 2):
                     for m in range(j - 1, j + 2):
                         if 0 <= k < width and 0 <= m < height and binary_background[k, m] == 255 \
-                                and np.array_equal(image[k, m], np.array([0, 0, 0])):
+                                and np.array_equal(image[k, m], black):
                             image[k, m] = image[i, j]
-                            new_active_pixels.append((k, m))
+                            append((k, m))
                             running = True
+
+            # Make the pixels painted this loop the active pixels for the next loop
             active_pixels = new_active_pixels
 
-        color_count = {}
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
-                color = tuple(image[i, j])
-                if color not in color_count:
-                    color_count[color] = 1
-                else:
-                    color_count[color] += 1
-
-        for cc in color_count:
-            proc_img.set_weight_by_color(list(cc), color_count[cc])
+        # Count the number of pixels of each color and set the path weights accordingly
+        # The formula for weight is (width of path) ^ 2 / (number of pixels)
+        colors, counts = np.unique(image.reshape(-1, 3), axis=0, return_counts=True)
+        for color, count in zip(colors, counts):
+            proc_img.set_weight_by_color(color, count)
 
         return image

@@ -11,12 +11,14 @@ class Graph:
         self.adjacency_matrix = [[]]
         self.shortest_path = []
 
-    def add_vertex(self, x, y):
-        """Adds a vertex to the graph at a given position on the image."""
-        self.vertices.append((x, y))
+    def add_vertices(self, vertices):
+        """Adds a list of vertices to the graph."""
+        self.vertices += vertices
+        len_vertices = len(vertices)
+        len_adjacency_matrix = len(self.adjacency_matrix)
+        self.adjacency_matrix.extend([[0] * len_adjacency_matrix for _ in range(len_vertices)])
         for row in self.adjacency_matrix:
-            row.append(0)
-        self.adjacency_matrix.append([0] * len(self.adjacency_matrix))
+            row.extend([0] * len_vertices)
 
     def set_edge(self, u, v, weight, interpoints):
         """Sets the weight and interpolation points of an edge between two vertices."""
